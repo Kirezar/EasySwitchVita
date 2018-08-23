@@ -5,6 +5,9 @@ EasySwitchVita aims to simplify the transition between playing the PS Vita as a 
 
 ### [Download Here](https://github.com/Kirezar/EasySwitchVita/releases)
 
+![AppImage](https://i.imgur.com/1VqtmAx.png)
+
+
 ## Supported Plugins
 
 EasySwitchVita supports the following plugins
