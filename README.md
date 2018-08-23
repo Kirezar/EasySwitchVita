@@ -3,6 +3,8 @@ Plugin toggler for PSVita
 
 EasySwitchVita aims to simplify the transition between playing the PS Vita as a handheld, and playing it on a big screen by allowing you to toggle the required plugins on and off and rebooting, as fast as one click, without the need to mess with the configuration files.
 
+### [Download Here](https://github.com/Kirezar/EasySwitchVita/releases)
+
 ## Supported Plugins
 
 EasySwitchVita supports the following plugins
