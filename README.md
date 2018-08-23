@@ -22,12 +22,12 @@ When you have everything set up, just press the **Switch!** button and the PSVit
 
 If you have the app set to auto reboot, but you want to change the settings, you can hold the **L** trigger whent he app starts, and it will take you to the configuration.
 
-## File Locations and Backups
+## File locations and Backups
 
 The configuration file for the app is stored on **ux0:data/EasySwitchVita/ez_config.txt**
 Backups for the main configuration file are stored on **ux0:data/EasySwitchVita/config_backup_switch.txt** and **ur0:tai/config_backup_switch.txt**
 
-## Known Issues and Help Needed
+## Known issues and help needed
 
 Currently only supports the config.txt file stored in **ur0:tai/**, no support implemented for config files in **ux0:tai/**
 
