@@ -45,4 +45,5 @@ I am not responsible for what might happen to your PSVita system if the applicat
 
 * [xerpi](https://github.com/xerpi/) for udcd_uvc, ds3vita and ds4vita
 * [TheOfficialFlow](https://github.com/TheOfficialFloW/) for minivitatv and ds3, and all his hardwork for the PSVita community!
+* [Rinnegatamante](https://github.com/Rinnegatamante/) for lpp-vita
 * [theheroGAC](https://github.com/theheroGAC/) for AutoPlugin, which I took inspiration from for editing the config file to edit the plugins
