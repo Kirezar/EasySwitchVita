@@ -16,6 +16,7 @@ EasySwitchVita supports the following plugins
 * [ds3vita by xerpi](https://github.com/xerpi/ds3vita)
 * [ds4vita by xerpi](https://github.com/xerpi/ds4vita)
 * [MiniVitaTV and ds3 by TheOfficialFlow](https://github.com/TheOfficialFloW/MiniVitaTV)
+* [NoLockScreen by TheOfficialFlow](https://github.com/TheOfficialFloW/VitaTweaks)
 
 ## Guide
 After opening, the app will show what plugins from the list above you have installed and their current state. Green means the plugin is currently on, and red means it's currently off. If the plugin is not found in the config file, it will show as Not Found.
@@ -34,8 +35,6 @@ Backups for the main configuration file are stored on **ux0:data/EasySwitchVita/
 
 ## Known issues and help needed
 
-Currently only supports the config.txt file stored in **ur0:tai/**, no support implemented for config files in **ux0:tai/**
-
 Application was developed in a firmware version **3.65** PS Vita, and has not been tested in any other version. I appreciate the testing of the app in different firmwares!
 
 ## Build
@@ -49,6 +48,6 @@ I am not responsible for what might happen to your PSVita system if the applicat
 ### Thanks to the following people
 
 * [xerpi](https://github.com/xerpi/) for udcd_uvc, ds3vita and ds4vita
-* [TheOfficialFlow](https://github.com/TheOfficialFloW/) for minivitatv and ds3, and all his hardwork for the PSVita community!
+* [TheOfficialFlow](https://github.com/TheOfficialFloW/) for minivitatv, ds3 and nolockscreen, and all his hardwork for the PSVita community!
 * [Rinnegatamante](https://github.com/Rinnegatamante/) for lpp-vita
 * [theheroGAC](https://github.com/theheroGAC/) for AutoPlugin, which I took inspiration from for editing the config file to edit the plugins
