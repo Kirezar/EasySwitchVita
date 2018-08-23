@@ -5,3 +5,4 @@ ds4vita=false
 minivitatv=false
 reboot_timer=3
 auto_reboot=false
+nolockscreen=false

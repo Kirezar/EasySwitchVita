@@ -3,6 +3,8 @@
 config = {} -- Config values for each plugin
 colors = {} -- Color values for the plugins, also describes the state (On, Off, Not Found)
 
+tai_location = "ur0:" -- Location of the tai folder that contains the config.txt file and the plugins
+
 timerObj = Timer.new()
 
 file = nil -- Backup File
@@ -21,6 +23,17 @@ selectionRectY = 115
 selectionWidth = 140
 selectionHeight = 30
 
+-- Touch Rectangle Variables
+touchRectX = 550
+touchRectY = 350
+touchWidth = 250
+touchHeight = 100
+
+-- Load Touch Images
+--switchButton = Graphics.loadImage("app0:/images/SwitchButton.png")
+--switchButtonSelected = Graphics.loadImage("app0:/images/SwitchButtonSelected.png")
+--currentSwitch = switchButton
+
 -- Selected Button
 selectedButton = 0
 
@@ -31,7 +44,15 @@ function InitText()
   Graphics.debugPrint(5, 50, "Plugins marked with an X will be toggled on/off depending on their previous state", Color.new(255,255,255))
   Graphics.debugPrint(5, 85, "Currently On", Color.new(0,255,0))
   Graphics.debugPrint(150, 85, "Currently Off", Color.new(255,0,0))
+  Graphics.debugPrint(295, 85, "Config Location: " .. tai_location, Color.new(255,255,255))
  
+end
+
+function FindTaiFolder()
+  if System.doesFileExist("ux0:/tai/config.txt") then
+    tai_location = "ux0:"
+  end
+  
 end
 
 -- Creates data/EasySwitchVita if it doesn't exist
@@ -51,7 +72,7 @@ function TaiConfigInit()
   
   -- Create new backup file
   local createFile = System.openFile("ux0:/data/EasySwitchVita/config_backup_switch.txt", FCREATE)
-  file = System.openFile("ur0:tai/config.txt", FREAD)
+  file = System.openFile(tai_location .. "tai/config.txt", FREAD)
   System.seekFile(file, 0, SET)
   text = System.readFile(file, System.sizeFile(file))
   System.closeFile(file)
@@ -66,8 +87,8 @@ function TaiConfigInit()
 end
 
 -- Finds if the plugin is on, off, or unavailable in the config
-function GetState(plugin)
-  local text_to_find = "ur0:tai/" .. plugin .. ".skprx"
+function GetState(plugin, ext)
+  local text_to_find = tai_location .. "tai/" .. plugin .. ext
   local i,j = string.find(text, text_to_find)
   
   if i == nil then
@@ -92,11 +113,13 @@ function SetColors()
   colors["ds4vita"] = nil
   colors["ds3"] = nil
   colors["minivitatv"] = nil
-  GetState("udcd_uvc")
-  GetState("ds3vita")
-  GetState("ds4vita")
-  GetState("ds3")
-  GetState("minivitatv")
+  colors["nolockscreen"] = nil
+  GetState("udcd_uvc", ".skprx")
+  GetState("ds3vita", ".skprx")
+  GetState("ds4vita", ".skprx")
+  GetState("ds3", ".skprx")
+  GetState("minivitatv", ".skprx")
+  GetState("nolockscreen", ".suprx")
 end
 
 -- Gets configuration from the ez_config file
@@ -131,6 +154,7 @@ function ConfigVariableInit()
   config["ds4vita"] = false
   config["ds3"] = false
   config["minivitatv"] = false
+  config["nolockscreen"] = false
   config["reboot_timer"] = 3
   config["auto_reboot"] = false
 end
@@ -139,6 +163,18 @@ end
 function GetValue(str)
   local i,j = string.find(configText, str)
   local value = ""
+  
+  if i == nil then
+    
+    if string.match(str, "reboot_timer") then
+      configText = configText .. "\n" .. str .. "=3"
+    else
+      configText = configText .. "\n" .. str .. "=false"
+    end
+    
+    i,j = string.find(configText, str)
+    
+  end
   
   if (string.match(string.lower(string.sub(configText, j+2, j+5)), "true")) then
     value = true
@@ -161,6 +197,7 @@ function ReadSwitchConfig()
   config["ds4vita"] = GetValue("ds4vita")
   config["minivitatv"] = GetValue("minivitatv")
   config["ds3"] = GetValue("ds3")
+  config["nolockscreen"] = GetValue("nolockscreen")
 end
 
 -- Updates a value in the ez_config file
@@ -193,11 +230,15 @@ function SaveConfig()
   ChangeConfigParameter("ds4vita")
   ChangeConfigParameter("ds3")
   ChangeConfigParameter("minivitatv")
+  ChangeConfigParameter("nolockscreen")
   ChangeConfigParameter("reboot_timer")
   ChangeConfigParameter("auto_reboot")
   
   System.writeFile(configFile, configText, string.len(configText))
   System.closeFile(configFile)
+  
+  while not System.doesFileExist("ux0:/data/EasySwitchVita/ez_config.txt") do
+  end
   
 end
 
@@ -207,12 +248,21 @@ function DrawSelectionRect()
   Graphics.fillRect(selectionRectX, selectionRectX + selectionWidth, selectionRectY, selectionRectY + selectionHeight, Color.new(0,0,255)) 
 end
 
+-- Draw the touch rect
+function DrawTouchImage(img)
+  Graphics.drawImage(touchRectX, touchRectY, img)
+end
+
+
 -- Draws the GUI elements other than the initial text
 function GUI()
   
   -- Update the selection rectangle to the position of the selected button and draw it
   selectionRectY = 115 + 30*selectedButton
   DrawSelectionRect()
+  
+  -- Draw the touch image
+  --DrawTouchImage(currentSwitch)
   
   -- Draw the text for each plugin, with the color corresponding to the state, and whether they should be toggled or not
   Graphics.debugPrint(5, 120, "Switch!", Color.new(255,255,255))
@@ -221,8 +271,9 @@ function GUI()
   Graphics.debugPrint(5, 210, "ds4vita:", colors["ds4vita"])
   Graphics.debugPrint(5, 240, "ds3:", colors["ds3"])
   Graphics.debugPrint(5, 270, "minivitatv:", colors["minivitatv"])
-  Graphics.debugPrint(5, 300, "Reboot Timer:", Color.new(255,255,255))
-  Graphics.debugPrint(5, 330, "Auto Reboot:", Color.new(255,255,255))
+  Graphics.debugPrint(5, 300, "nolockscreen:", colors["nolockscreen"])
+  Graphics.debugPrint(5, 330, "Reboot Timer:", Color.new(255,255,255))
+  Graphics.debugPrint(5, 360, "Auto Reboot:", Color.new(255,255,255))
   
   -- Compare the color, if it's (150, 150, 150)/Grey, then the plugin has not been found in the config, else, show if the plugin is to be toggled or not
   if colors["udcd_uvc"] == Color.new(150,150,150) then
@@ -265,13 +316,21 @@ function GUI()
     Graphics.debugPrint(150, 270, "_", Color.new(255,255,255))
   end
   
+  if colors["nolockscreen"] == Color.new(150,150,150) then
+    Graphics.debugPrint(150, 300, "Not Found", Color.new(150,150,150))
+  elseif config["nolockscreen"] then
+    Graphics.debugPrint(150, 300, "X", Color.new(255,255,255))
+  else
+    Graphics.debugPrint(150, 300, "_", Color.new(255,255,255))
+  end
+  
   -- Draw the reboot timer
-  Graphics.debugPrint(150, 300, tostring(config["reboot_timer"]), Color.new(255,255,255))
+  Graphics.debugPrint(150, 330, tostring(config["reboot_timer"]), Color.new(255,255,255))
   
   if config["auto_reboot"] then
-    Graphics.debugPrint(150, 330, "X", Color.new(255,255,255))
+    Graphics.debugPrint(150, 360, "X", Color.new(255,255,255))
   else
-    Graphics.debugPrint(150, 330, "_", Color.new(255,255,255))
+    Graphics.debugPrint(150, 360, "_", Color.new(255,255,255))
   end
   
 end
@@ -288,11 +347,11 @@ function EndDraw()
 end
 
 -- Update one plugin in ur0:tai/config.txt
-function ChangeText(plugin)
+function ChangeText(plugin, ext)
   
   if config[plugin] then
     
-    local text_to_find = "ur0:tai/" .. plugin .. ".skprx"
+    local text_to_find = tai_location .. "tai/" .. plugin .. ext
     local i,j = string.find(text, text_to_find)
     
     if i == nil then
@@ -304,33 +363,39 @@ function ChangeText(plugin)
     
     
     if string.match(string.sub(text,i-1,i-1), "#") then
-      text = string.gsub(text, "#ur0:tai/" .. plugin .. ".skprx", "ur0:tai/" .. plugin .. ".skprx")
+      text = string.gsub(text, "#" .. tai_location .. "tai/" .. plugin .. ext, tai_location .. "tai/" .. plugin .. ext)
     else
-      text = string.gsub(text, "ur0:tai/" .. plugin .. ".skprx", "#ur0:tai/" .. plugin .. ".skprx")
+      text = string.gsub(text, tai_location .. "tai/" .. plugin .. ext, "#" .. tai_location .. "tai/" .. plugin .. ext)
     end
   end
 end
 
 -- Update the ur0:tai/config.txt file, save the ez_config file, show the reboot timer, and reboot
 function DoChanges()
-  tai_config = System.openFile("ur0:tai/config_new.txt", FCREATE)
+  tai_config = System.openFile(tai_location .. "tai/config_new.txt", FCREATE)
   
-  ChangeText("udcd_uvc")
-  ChangeText("ds3vita")
-  ChangeText("ds4vita")
-  ChangeText("ds3")
-  ChangeText("minivitatv")
+  ChangeText("udcd_uvc", ".skprx")
+  ChangeText("ds3vita", ".skprx")
+  ChangeText("ds4vita", ".skprx")
+  ChangeText("ds3", ".skprx")
+  ChangeText("minivitatv", ".skprx")
+  ChangeText("nolockscreen", ".suprx")
   System.writeFile(tai_config, text, string.len(text))
   
-  if System.doesFileExist("ur0:tai/config_backup_switch.txt") then
-    System.deleteFile("ur0:tai/config_backup_switch.txt")
+  if System.doesFileExist(tai_location .. "tai/config_backup_switch.txt") then
+    System.deleteFile(tai_location .. "tai/config_backup_switch.txt")
   end
   
-  System.rename("ur0:tai/config.txt", "ur0:tai/config_backup_switch.txt")
-  System.rename("ur0:tai/config_new.txt", "ur0:tai/config.txt")
+  System.rename(tai_location .. "tai/config.txt", tai_location .. "tai/config_backup_switch.txt")
+  System.rename(tai_location .. "tai/config_new.txt", tai_location .. "tai/config.txt")
   
+  while not System.doesFileExist(tai_location .. "tai/config.txt") do
+  end
   
   SaveConfig()
+  
+  while not System.doesFileExist(tai_location .. "tai/config.txt") do
+  end
   
   Timer.reset(timerObj)
   EndDraw()
@@ -365,8 +430,10 @@ function CrossPressed()
     config["ds3"] = not config["ds3"]
   elseif (selectedButton == 5) then
     config["minivitatv"] = not config["minivitatv"]
+  elseif (selectedButton == 6) then
+  config["nolockscreen"] = not config["nolockscreen"]
   
-  elseif (selectedButton == 7) then
+  elseif (selectedButton == 8) then
     config["auto_reboot"] = not config["auto_reboot"]
   end
 end
@@ -399,6 +466,11 @@ function CheckIfAvailable(button, direction)
       selectedButton = button + direction
       CheckIfAvailable(selectedButton, direction)
     end
+  elseif button == 6 then
+    if colors["nolockscreen"] == Color.new(150,150,150) then
+      selectedButton = button + direction
+      CheckIfAvailable(selectedButton, direction)
+    end
   end
   
 end
@@ -414,9 +486,24 @@ function CheckForInterrupt()
   end
 end
 
+--[[function CheckForTouch()
+  local x, y = Controls.readTouch()
+  
+  if x ~= nil and x >= touchRectX and x <= touchRectX + touchWidth and y >= touchRectY and y <= touchRectY + touchHeight then
+    currentSwitch = switchButtonSelected
+  elseif x == nil and currentSwitch == switchButtonSelected then
+    DoChanges()
+  else
+    currentSwitch = switchButton
+  end
+  
+end--]]
+
+
 -- Start Function
 function Start()
   
+  FindTaiFolder()
   DirectoryInit()
   TaiConfigInit()
   SwitchConfigInit()
@@ -453,6 +540,9 @@ while true do
     -- Display GUI text
     GUI()
     
+    -- Check for touch on the touch rect
+    --CheckForTouch()
+    
     -- Read what controls are pressed
     pad = Controls.read()
     
@@ -466,7 +556,7 @@ while true do
       
       -- Down was pressed
       if Controls.check(pad, SCE_CTRL_DOWN) then
-        if selectedButton < 7 then
+        if selectedButton < 8 then
           selectedButton = selectedButton + 1
           CheckIfAvailable(selectedButton, 1)
         end
@@ -484,14 +574,14 @@ while true do
       
       -- Left was pressed, reduce time
       if Controls.check(pad, SCE_CTRL_LEFT) then
-        if selectedButton == 6 and config["reboot_timer"] > 0 then
+        if selectedButton == 7 and config["reboot_timer"] > 0 then
           config["reboot_timer"] = config["reboot_timer"]-1
         end
       end
       
       -- Right was pressed, increase time
       if Controls.check(pad, SCE_CTRL_RIGHT) then
-        if selectedButton == 6 then
+        if selectedButton == 7 then
           config["reboot_timer"] = config["reboot_timer"]+1
         end
       end
