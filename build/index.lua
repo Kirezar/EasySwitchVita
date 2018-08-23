@@ -161,24 +161,25 @@ end
 
 -- Get the value from the configText for one variable. Either true, false, or a number in the case of the auto_reboot
 function GetValue(str)
-  local i,j = string.find(configText, str)
+  local i,j = string.find(configText, str .. "=")
   local value = ""
+  
+  
   
   if i == nil then
     
     if string.match(str, "reboot_timer") then
-      configText = configText .. "\n" .. str .. "=3"
+      configText = string.sub(configText, 0, string.len(configText)-1) .. "\n" .. str .. "=3\n"
     else
-      configText = configText .. "\n" .. str .. "=false"
+      configText = string.sub(configText, 0, string.len(configText)-1) .. "\n" .. str .. "=false\n"
     end
     
-    i,j = string.find(configText, str)
-    
+    i,j = string.find(configText, str .. "=")
   end
   
-  if (string.match(string.lower(string.sub(configText, j+2, j+5)), "true")) then
+  if (string.match(string.lower(string.sub(configText, j+1, j+4)), "true")) then
     value = true
-  elseif (string.match(string.lower(string.sub(configText, j+2, j+6)), "false")) then
+  elseif (string.match(string.lower(string.sub(configText, j+1, j+5)), "false")) then
     value = false
   elseif(string.match(str, "reboot_timer")) then
     local k,w = string.find(configText, '%d+', j)
@@ -202,17 +203,17 @@ end
 
 -- Updates a value in the ez_config file
 function ChangeConfigParameter(str)
-  local i,j = string.find(configText, str)
+  local i,j = string.find(configText, str .. "=")
   
   
   if(string.match(str, "reboot_timer")) then
     configText = string.gsub(configText, "reboot_timer=%d+", "reboot_timer="..config["reboot_timer"])
   elseif config[str] then
-    if (string.match(string.lower(string.sub(configText, i, j+6)), str .. "=false")) then
+    if (string.match(string.lower(string.sub(configText, i, j+5)), str .. "=false")) then
       configText = string.gsub(configText, str .. "=false", str .. "=true")
     end
   else
-    if (string.match(string.lower(string.sub(configText, i, j+5)), str .. "=true")) then
+    if (string.match(string.lower(string.sub(configText, i, j+4)), str .. "=true")) then
       configText = string.gsub(configText, str .. "=true", str .. "=false")
     end
   end
@@ -258,7 +259,15 @@ end
 function GUI()
   
   -- Update the selection rectangle to the position of the selected button and draw it
-  selectionRectY = 115 + 30*selectedButton
+  
+  if(selectedButton < 9) then 
+    selectionRectY = 115 + 30*selectedButton
+    selectionRectX = 3
+  else
+    selectionRectY = 115
+    selectionRectX = 147
+  end
+  
   DrawSelectionRect()
   
   -- Draw the touch image
@@ -266,6 +275,7 @@ function GUI()
   
   -- Draw the text for each plugin, with the color corresponding to the state, and whether they should be toggled or not
   Graphics.debugPrint(5, 120, "Switch!", Color.new(255,255,255))
+  Graphics.debugPrint(150, 120, "Save config", Color.new(255,255,255))
   Graphics.debugPrint(5, 150, "udcd_uvc:", colors["udcd_uvc"])
   Graphics.debugPrint(5, 180, "ds3vita:", colors["ds3vita"])
   Graphics.debugPrint(5, 210, "ds4vita:", colors["ds4vita"])
@@ -435,7 +445,17 @@ function CrossPressed()
   
   elseif (selectedButton == 8) then
     config["auto_reboot"] = not config["auto_reboot"]
+  
+  elseif (selectedButton == 9) then
+    SaveConfig()
+    BeginDraw()
+    Graphics.debugPrint(400, 252, "ez_config.txt saved!", Color.new(255,255,255))
+    EndDraw()
+
+    System.wait(1000000)
+    
   end
+  
 end
 
 -- When the cursor is moved, check if next position is available, if it isn't move cursor and check again
@@ -564,7 +584,7 @@ while true do
       
       -- Up was pressed
       if Controls.check(pad, SCE_CTRL_UP) then
-        if selectedButton > 0 then
+        if selectedButton > 0 and selectedButton ~= 9 then
           selectedButton = selectedButton - 1
           CheckIfAvailable(selectedButton, -1)
         end
@@ -576,6 +596,8 @@ while true do
       if Controls.check(pad, SCE_CTRL_LEFT) then
         if selectedButton == 7 and config["reboot_timer"] > 0 then
           config["reboot_timer"] = config["reboot_timer"]-1
+        elseif selectedButton == 9 then
+          selectedButton = 0
         end
       end
       
@@ -583,6 +605,8 @@ while true do
       if Controls.check(pad, SCE_CTRL_RIGHT) then
         if selectedButton == 7 then
           config["reboot_timer"] = config["reboot_timer"]+1
+        elseif selectedButton == 0 then
+          selectedButton = 9
         end
       end
       
